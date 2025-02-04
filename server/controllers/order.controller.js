@@ -11,6 +11,36 @@ const snap = new midtransClient.Snap({
   clientKey: process.env.MIDTRANS_CLIENT_KEY,
 });
 
+const updatePaymentStatus = async (orderId, paymentStatus) => {
+  await OrderModel.updateMany(
+    { orderId: orderId },
+    { payment_status: paymentStatus }
+  );
+};
+
+export const checkPendingPayments = async () => {
+  try {
+    const pendingOrders = await OrderModel.find({ payment_status: "PENDING" });
+
+    for (const order of pendingOrders) {
+      const orderId = order.orderId;
+
+      // Memeriksa status pembayaran dari Midtrans
+      const statusResponse = await snap.transaction.status(orderId);
+
+      // Memperbarui status pembayaran di database jika ada perubahan
+      if (statusResponse.transaction_status !== "PENDING") {
+        await OrderModel.updateOne(
+          { orderId: orderId },
+          { payment_status: statusResponse.transaction_status }
+        );
+      }
+    }
+  } catch (error) {
+    console.error("Error checking pending payments:", error);
+  }
+};
+
 export async function CashOnDeliveryOrderController(request, response) {
   try {
     const userId = request.userId; // auth middleware
@@ -87,13 +117,13 @@ export async function paymentController(request, response) {
       },
       callbacks: {
         finish: `${process.env.FRONTEND_URL}/success`, // Redirect ke halaman sukses
-        error: `${process.env.FRONTEND_URL}/cancel`, // Redirect ke halaman gagal
+        unfinish: `${process.env.FRONTEND_URL}/cancel`, // Redirect ke halaman gagal
       },
     };
 
     const midtransResponse = await snap.createTransaction(parameter);
-    console.log("Sending request to Midtrans:", parameter);
-    console.log("Midtrans Response:", midtransResponse);
+    // console.log("Sending request to Midtrans:", parameter);
+    // console.log("Midtrans Response:", midtransResponse);
 
     // Jika transaksi sukses, buat order di database dan hapus dari keranjang
     if (midtransResponse.token) {
@@ -188,6 +218,9 @@ export async function webhookMidtrans(request, response) {
       // Hapus item dari keranjang setelah pembayaran berhasil
       await UserModel.findByIdAndUpdate(userId, { shopping_cart: [] });
       await CartProductModel.deleteMany({ userId: userId });
+
+      // Update status pembayaran jika perlu
+      await updatePaymentStatus(event.order_id, event.transaction_status);
 
       break;
     default:

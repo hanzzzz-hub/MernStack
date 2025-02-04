@@ -76,49 +76,63 @@ const ProductAdmin = () => {
   }, [search]);
 
   return (
-    <section className="">
-      <div className="p-2  bg-white shadow-md flex items-center justify-between gap-4">
-        <h2 className="font-semibold">Product</h2>
-        <div className="h-full min-w-24 max-w-56 w-full ml-auto bg-blue-50 px-4 flex items-center gap-3 py-2 rounded  border focus-within:border-primary-200">
-          <IoSearchOutline size={25} />
+    <section className="p-4">
+      <div className="bg-white shadow-md flex flex-wrap items-center justify-between gap-4 p-4 rounded">
+        <h2 className="font-semibold text-lg">Product</h2>
+        <div className="h-10 min-w-24 max-w-lg w-full sm:w-1/2 bg-blue-50 px-4 flex items-center gap-3 py-2 rounded border focus-within:border-primary-200">
+          <IoSearchOutline size={20} />
           <input
             type="text"
-            placeholder="Search product here ..."
-            className="h-full w-full  outline-none bg-transparent"
+            placeholder="Search product..."
+            className="h-full w-full outline-none bg-transparent text-sm"
             value={search}
             onChange={handleOnChange}
           />
         </div>
       </div>
+
       {loading && <Loading />}
 
       <div className="p-4 bg-blue-50">
         <div className="min-h-[55vh]">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {productData.map((p, index) => {
-              return (
-                <ProductCardAdmin
-                  data={p}
-                  fetchProductData={fetchProductData}
-                />
-              );
-            })}
+          <div
+            className="grid gap-4"
+            style={{
+              gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+            }}
+          >
+            {productData.map((p) => (
+              <ProductCardAdmin
+                key={p._id}
+                data={p}
+                fetchProductData={fetchProductData}
+              />
+            ))}
           </div>
         </div>
 
-        <div className="flex justify-between my-4">
+        {/* Navigasi Pagination */}
+        <div className="flex justify-between items-center my-4">
           <button
             onClick={handlePrevious}
-            className="border border-primary-200 px-4 py-1 hover:bg-primary-200"
+            disabled={page === 1}
+            className="border border-gray-300 px-4 py-2 rounded bg-gray-200 text-black 
+              hover:bg-red-500 hover:text-black transition-all duration-300
+              disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-yellow-300"
           >
             Previous
           </button>
-          <button className="w-full bg-slate-100">
-            {page}/{totalPageCount}
-          </button>
+
+          <span className="px-4 py-2 bg-slate-100 rounded">
+            {page} / {totalPageCount}
+          </span>
+
           <button
             onClick={handleNext}
-            className="border border-primary-200 px-4 py-1 hover:bg-primary-200"
+            disabled={page === totalPageCount}
+            className="border border-gray-300 px-4 py-2 rounded bg-gray-200 text-black 
+              hover:bg-red-500 hover:text-black transition-all duration-300
+              disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-yellow-300"
           >
             Next
           </button>

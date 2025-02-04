@@ -1,7 +1,8 @@
+// index.js
+
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-dotenv.config();
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import helmet from "helmet";
@@ -14,6 +15,9 @@ import productRouter from "./route/product.route.js";
 import cartRouter from "./route/cart.route.js";
 import addressRouter from "./route/address.route.js";
 import orderRouter from "./route/order.route.js";
+import { checkPendingPayments } from "./controllers/order.controller.js"; // Import fungsi
+
+dotenv.config();
 
 const app = express();
 app.use(
@@ -34,7 +38,6 @@ app.use(
 const PORT = 8080 || process.env.PORT;
 
 app.get("/", (request, response) => {
-  ///server to client
   response.json({
     message: "Server is running " + PORT,
   });
@@ -48,6 +51,11 @@ app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/address", addressRouter);
 app.use("/api/order", orderRouter);
+
+// Menjalankan fungsi setiap 10 detik
+setInterval(() => {
+  checkPendingPayments();
+}, 10000); // 10000 ms = 10 detik
 
 connectDB().then(() => {
   app.listen(PORT, () => {
