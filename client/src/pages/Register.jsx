@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { FaRegEyeSlash } from "react-icons/fa6";
-import { FaRegEye } from "react-icons/fa6";
+import { FaRegEyeSlash, FaRegEye, FaSpinner } from "react-icons/fa6";
 import toast from "react-hot-toast";
 import Axios from "../utils/Axios";
 import SummaryApi from "../common/SummaryApi";
@@ -16,60 +15,47 @@ const Register = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    setData((preve) => {
-      return {
-        ...preve,
-        [name]: value,
-      };
-    });
+    setData((prev) => ({ ...prev, [name]: value }));
   };
 
   const valideValue = Object.values(data).every((el) => el);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (data.password !== data.confirmPassword) {
-      toast.error("password and confirm password must be same");
+      toast.error("Password and confirm password must be the same");
       return;
     }
 
+    setLoading(true);
     try {
-      const response = await Axios({
-        ...SummaryApi.register,
-        data: data,
-      });
-
+      const response = await Axios({ ...SummaryApi.register, data });
       if (response.data.error) {
         toast.error(response.data.message);
       }
-
       if (response.data.success) {
         toast.success(response.data.message);
-        setData({
-          name: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-        });
+        setData({ name: "", email: "", password: "", confirmPassword: "" });
         navigate("/login");
       }
     } catch (error) {
       AxiosToastError(error);
+    } finally {
+      setLoading(false);
     }
   };
+
   return (
     <section className="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white w-full max-w-lg mx-auto rounded-lg shadow-lg p-8">
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
           Welcome to MernStack
         </h2>
-
         <form className="grid gap-6" onSubmit={handleSubmit}>
           <div className="grid gap-2">
             <label htmlFor="name" className="text-gray-700 font-medium">
@@ -87,7 +73,6 @@ const Register = () => {
               required
             />
           </div>
-
           <div className="grid gap-2">
             <label htmlFor="email" className="text-gray-700 font-medium">
               Email :
@@ -103,12 +88,11 @@ const Register = () => {
               required
             />
           </div>
-
           <div className="grid gap-2">
             <label htmlFor="password" className="text-gray-700 font-medium">
               Password :
             </label>
-            <div className="bg-blue-50 p-3 border border-gray-300 rounded-lg flex items-center focus-within:ring-2 focus-within:ring-blue-400">
+            <div className="bg-blue-50 p-3 border border-gray-300 rounded-lg flex items-center">
               <input
                 type={showPassword ? "text" : "password"}
                 id="password"
@@ -121,7 +105,7 @@ const Register = () => {
               />
               <div
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="cursor-pointer text-gray-600 hover:text-gray-800 ml-2"
+                className="cursor-pointer ml-2"
               >
                 {showPassword ? (
                   <FaRegEyeSlash size={20} />
@@ -131,7 +115,6 @@ const Register = () => {
               </div>
             </div>
           </div>
-
           <div className="grid gap-2">
             <label
               htmlFor="confirmPassword"
@@ -139,7 +122,7 @@ const Register = () => {
             >
               Confirm Password :
             </label>
-            <div className="bg-blue-50 p-3 border border-gray-300 rounded-lg flex items-center focus-within:ring-2 focus-within:ring-blue-400">
+            <div className="bg-blue-50 p-3 border border-gray-300 rounded-lg flex items-center">
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 id="confirmPassword"
@@ -152,7 +135,7 @@ const Register = () => {
               />
               <div
                 onClick={() => setShowConfirmPassword((prev) => !prev)}
-                className="cursor-pointer text-gray-600 hover:text-gray-800 ml-2"
+                className="cursor-pointer ml-2"
               >
                 {showConfirmPassword ? (
                   <FaRegEyeSlash size={20} />
@@ -162,17 +145,16 @@ const Register = () => {
               </div>
             </div>
           </div>
-
           <button
-            disabled={!valideValue}
+            disabled={!valideValue || loading}
             className={`${
               valideValue ? "bg-green-600 hover:bg-green-700" : "bg-gray-400"
-            } text-white py-3 rounded-lg font-semibold tracking-wide transition duration-300`}
+            } text-white py-3 rounded-lg font-semibold tracking-wide transition duration-300 flex items-center justify-center`}
           >
+            {loading ? <FaSpinner className="animate-spin mr-2" /> : null}{" "}
             Register
           </button>
         </form>
-
         <p className="text-center mt-6 text-gray-600">
           Already have an account?{" "}
           <Link

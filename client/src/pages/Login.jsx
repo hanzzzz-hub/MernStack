@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { FaRegEyeSlash } from "react-icons/fa6";
-import { FaRegEye } from "react-icons/fa6";
+import { FaRegEyeSlash, FaRegEye } from "react-icons/fa6";
+import { FaSpinner } from "react-icons/fa";
 import toast from "react-hot-toast";
 import Axios from "../utils/Axios";
 import SummaryApi from "../common/SummaryApi";
@@ -11,35 +11,24 @@ import { useDispatch } from "react-redux";
 import { setUserDetails } from "../store/userSlice";
 
 const Login = () => {
-  const [data, setData] = useState({
-    email: "",
-    password: "",
-  });
+  const [data, setData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    setData((preve) => {
-      return {
-        ...preve,
-        [name]: value,
-      };
-    });
+    setData((prev) => ({ ...prev, [name]: value }));
   };
 
   const valideValue = Object.values(data).every((el) => el);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setLoading(true);
     try {
-      const response = await Axios({
-        ...SummaryApi.login,
-        data: data,
-      });
+      const response = await Axios({ ...SummaryApi.login, data });
 
       if (response.data.error) {
         toast.error(response.data.message);
@@ -53,16 +42,16 @@ const Login = () => {
         const userDetails = await fetchUserDetails();
         dispatch(setUserDetails(userDetails.data));
 
-        setData({
-          email: "",
-          password: "",
-        });
+        setData({ email: "", password: "" });
         navigate("/");
       }
     } catch (error) {
       AxiosToastError(error);
+    } finally {
+      setLoading(false);
     }
   };
+
   return (
     <section className="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white w-full max-w-lg mx-auto rounded-lg shadow-lg p-8">
@@ -120,12 +109,12 @@ const Login = () => {
           </div>
 
           <button
-            disabled={!valideValue}
+            disabled={!valideValue || loading}
             className={`${
               valideValue ? "bg-green-600 hover:bg-green-700" : "bg-gray-400"
-            } text-white py-3 rounded-lg font-semibold tracking-wide transition duration-300`}
+            } text-white py-3 rounded-lg font-semibold tracking-wide transition duration-300 flex items-center justify-center`}
           >
-            Login
+            {loading ? <FaSpinner className="animate-spin mr-2" /> : null} Login
           </button>
         </form>
 
